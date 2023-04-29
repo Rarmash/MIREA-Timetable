@@ -1,11 +1,8 @@
 from flask import Flask, request
-import requests
-import json
-import datetime
-from options import Collection, startweek
+from options import Collection
 from transliterate import translit
 import pymongo.errors
-from modules import check_group, get_table, get_tomorrow_table
+from modules import check_group, get_table, get_tomorrow_table, get_yesterday_table
 
 app = Flask(__name__)
 
@@ -40,6 +37,14 @@ def main():
             group = group['group_num'].replace(' ', '')
             table = get_tomorrow_table.get_tomorrow_table(group)
             response["response"]["text"] = f"Расписание на завтра для группы {group}:\n{table}"
+        else:
+            response["response"]["text"] = 'Вы мне не называли свою группу. Просто скажите мне "Алиса, добавь мою группу".'
+    elif "вчера" in text.lower():
+        group = Collection.find_one({"_id": user_id})
+        if group:
+            group = group['group_num'].replace(' ', '')
+            table = get_yesterday_table.get_yesterday_table(group)
+            response["response"]["text"] = f"Расписание на вчера для группы {group}:\n{table}"
         else:
             response["response"]["text"] = 'Вы мне не называли свою группу. Просто скажите мне "Алиса, добавь мою группу".'
     elif "групп" in text.lower():
