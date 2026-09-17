@@ -13,7 +13,7 @@ env:
   REGISTRY: ghcr.io
   APP_IMAGE: ghcr.io/rarmash/mirea-timetable
   SCHEDULE_API_IMAGE: ghcr.io/rarmash/rtu-mirea-schedule-api
-  SCHEDULE_API_REF: fdf504216ac6312ce5e7cff9a9a9a32406b2972af6
+  SCHEDULE_API_REF: fdf504216ac6312ce5e7cff9a9a32406b2972af6
 
 jobs:
   build-and-publish:
