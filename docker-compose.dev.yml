@@ -1,0 +1,8 @@
+services:
+  app:
+    build: .
+    image: mirea-timetable-app:local
+
+  schedule-api:
+    build: https://github.com/Wyndace/rtu-mirea-schedule-api.git
+    image: mirea-timetable-schedule-api:local

@@ -1,15 +1,8 @@
-from dotenv import load_dotenv
-from pathlib import Path
 import os
-import pymongo
-import datetime
 
-load_dotenv()
-env_path = Path('.')/'.env'
-load_dotenv(dotenv_path=env_path)
-
-mongodb_link = os.environ["MONGODB"]
-startweek = datetime.date(2023, 2, 9).isocalendar()[1]
-
-myclient = pymongo.MongoClient(mongodb_link)
-Collection = myclient["MIREA"]["Users"]
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://mirea:mirea@localhost:5432/mirea",
+)
+SCHEDULE_API_URL = os.getenv("SCHEDULE_API_URL", "http://localhost:8000").rstrip("/")
+SCHEDULE_API_TIMEOUT = float(os.getenv("SCHEDULE_API_TIMEOUT", "3.0"))

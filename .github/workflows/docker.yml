@@ -1,0 +1,79 @@
+name: Build and publish Docker images
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  APP_IMAGE: ghcr.io/rarmash/mirea-timetable
+  SCHEDULE_API_IMAGE: ghcr.io/rarmash/rtu-mirea-schedule-api
+  SCHEDULE_API_REF: fdf504216ac6312ce5e7cff4a9a9a32406b2972af6
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout skill
+        uses: actions/checkout@v4
+
+      - name: Checkout schedule API
+        uses: actions/checkout@v4
+        with:
+          repository: Wyndace/rtu-mirea-schedule-api
+          ref: ${{ env.SCHEDULE_API_REF }}
+          path: schedule-api
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata for skill
+        id: app-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.APP_IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Build and push skill image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.app-meta.outputs.tags }}
+          labels: ${{ steps.app-meta.outputs.labels }}
+          cache-from: type=gha,scope=skill
+          cache-to: type=gha,mode=max,scope=skill
+
+      - name: Docker metadata for schedule API
+        id: api-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.SCHEDULE_API_IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.SCHEDULE_API_REF }}
+
+      - name: Build and push schedule API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./schedule-api
+          push: true
+          tags: ${{ steps.api-meta.outputs.tags }}
+          labels: ${{ steps.api-meta.outputs.labels }}
+          cache-from: type=gha,scope=schedule-api
+          cache-to: type=gha,mode=max,scope=schedule-api

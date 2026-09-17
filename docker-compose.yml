@@ -1,0 +1,47 @@
+services:
+  app:
+    image: ${APP_IMAGE:-ghcr.io/rarmash/mirea-timetable:latest}
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://mirea:mirea@postgres:5432/mirea
+      SCHEDULE_API_URL: ${SCHEDULE_API_URL:-http://schedule-api:8000}
+      SCHEDULE_API_TIMEOUT: ${SCHEDULE_API_TIMEOUT:-3.0}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      schedule-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  schedule-api:
+    image: ${SCHEDULE_API_IMAGE:-ghcr.io/rarmash/rtu-mirea-schedule-api:latest}
+    environment:
+      PORT: 8000
+      DEBUG: "false"
+      CACHE_TTL: 3600
+    ports:
+      - "8001:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/schema')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mirea
+      POSTGRES_USER: mirea
+      POSTGRES_PASSWORD: mirea
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mirea -d mirea"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
